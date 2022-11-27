@@ -5,14 +5,18 @@ public class Stacja_PKS {
     static int DOTARCIE_DO_CELU =4;
     static int WYPADEK_DROGOWY =5;
     int miejsca_parkingowe;
+    int ilosc_kierowcow;
     int zajete_miejsca_parkingowe;
     int ilosc_autobusow;
-    Stacja_PKS(int miejsca_parkingowe, int ilosc_autobusow){
+    Stacja_PKS(int miejsca_parkingowe, int ilosc_autobusow,int ilosc_kierowcow){
         this.miejsca_parkingowe =miejsca_parkingowe;
         this.ilosc_autobusow =ilosc_autobusow;
         this.zajete_miejsca_parkingowe =0;
+        this.ilosc_kierowcow = ilosc_kierowcow;
+
     }
     synchronized int start(int numer){
+        ilosc_kierowcow--;
         zajete_miejsca_parkingowe--;
         System.out.println("Wyjazd autobusu z punktu "+numer);
         return WYJAZD;
@@ -25,6 +29,7 @@ public class Stacja_PKS {
         }
         if(zajete_miejsca_parkingowe < miejsca_parkingowe){
             zajete_miejsca_parkingowe++;
+            ilosc_kierowcow++;
             System.out.println("Powrut autobusu na punkt "+ zajete_miejsca_parkingowe);
             return AUTOBUS;
         }
@@ -33,6 +38,7 @@ public class Stacja_PKS {
     }
     synchronized void zmniejsz(){
         ilosc_autobusow--;
+        ilosc_kierowcow--;
         System.out.println("WYPADEK");
         if(ilosc_autobusow == miejsca_parkingowe) System.out.println("Tyle samo miejsc parkingowych co autobusow");
     }
