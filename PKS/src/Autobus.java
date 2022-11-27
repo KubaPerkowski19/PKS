@@ -1,45 +1,64 @@
-public class Stacja_PKS {
-    static int AUTOBUS =1;
-    static int WYJAZD =2;
-    static int JAZDA =3;
-    static int DOTARCIE_DO_CELU =4;
-    static int WYPADEK_DROGOWY =5;
-    int miejsca_parkingowe;
-    int ilosc_kierowcow;
-    int zajete_miejsca_parkingowe;
-    int ilosc_autobusow;
-    Stacja_PKS(int miejsca_parkingowe, int ilosc_autobusow,int ilosc_kierowcow){
-        this.miejsca_parkingowe =miejsca_parkingowe;
-        this.ilosc_autobusow =ilosc_autobusow;
-        this.zajete_miejsca_parkingowe =0;
-        this.ilosc_kierowcow = ilosc_kierowcow;
+import java.util.Random;
 
+public class Autobus extends Thread {
+    static int AUTOBUS = 1;
+    static int WYJAZD = 2;
+    static int JAZDA = 3;
+    static int DOTARCIE_DO_CELU = 4;
+    static int WYPADEK_DROGOWY = 5;
+    static int PRZERWA_NA_STACJI = 6;
+    static int TANKUJ = 1000;
+    static int REZERWA = 500;
+    int numer;
+    int paliwo;
+    int stan;
+    Stacja_PKS l;
+    Random rand;
+
+    public Autobus(int numer, int paliwo, Stacja_PKS l) {
+        this.numer = numer;
+        this.paliwo = paliwo;
+        this.stan = JAZDA;
+        this.l = l;
+        rand = new Random();
     }
-    synchronized int start(int numer){
-        ilosc_kierowcow--;
-        zajete_miejsca_parkingowe--;
-        System.out.println("Wyjazd autobusu z punktu "+numer);
-        return WYJAZD;
-    }
-    synchronized int parkuj(){
-        try{
-            Thread.currentThread().sleep(1000);//sleep for 1000 ms
+
+    public void run() {
+        while (true) {
+            if (stan == AUTOBUS) {
+                if (rand.nextInt(2) == 1) {
+                    stan = WYJAZD;
+                    paliwo = TANKUJ;
+                    System.out.println("prosze o zgode na wyjazd (autobus: " + numer+")");
+                    stan = l.start(numer);
+                } else {
+                    System.out.println("Czekam");
+                }
+            } else if (stan == WYJAZD) {
+                System.out.println("Wyruszam " + numer);
+                stan = JAZDA;
+            } else if (stan == JAZDA) {
+                paliwo -= rand.nextInt(500);
+                if (paliwo <= REZERWA) {
+                    stan = DOTARCIE_DO_CELU;
+                } else try {
+                    sleep(rand.nextInt(1000));
+                } catch (Exception e) {
+                }
+            } else if (stan == DOTARCIE_DO_CELU) {
+                System.out.println("Wracam na stacje " + numer + " ilosc paliwa " + paliwo);
+                stan = l.parkuj();
+                if (stan == DOTARCIE_DO_CELU) {
+                    paliwo -= rand.nextInt(500);
+                    System.out.println("REZERWA " + paliwo);
+                    if (paliwo <= 0) stan = WYPADEK_DROGOWY;
+                }
+            } else if (stan == WYPADEK_DROGOWY) {
+                System.out.println("Wypadek autobusu: " + numer);
+                l.zmniejsz();
+            } else if(stan == PRZERWA_NA_STACJI){
+                System.out.println("Autobus nr: " + numer+"Ma przerwe na stacji+");
+            }
         }
-        catch(Exception ie){
-        }
-        if(zajete_miejsca_parkingowe < miejsca_parkingowe){
-            zajete_miejsca_parkingowe++;
-            ilosc_kierowcow++;
-            System.out.println("Powrut autobusu na punkt "+ zajete_miejsca_parkingowe);
-            return AUTOBUS;
-        }
-        else
-        {return DOTARCIE_DO_CELU;}
-    }
-    synchronized void zmniejsz(){
-        ilosc_autobusow--;
-        ilosc_kierowcow--;
-        System.out.println("WYPADEK");
-        if(ilosc_autobusow == miejsca_parkingowe) System.out.println("Tyle samo miejsc parkingowych co autobusow");
     }
 }
